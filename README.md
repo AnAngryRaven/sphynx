@@ -7,10 +7,19 @@ As there are no official releases yet, please follow the build instructions belo
 
 # Build Instructions
 
-1. Ensure that you have Rust installed. If not, download according to your operating system (here)[https://www.rust-lang.org/tools/install]
-2. Clone the repo: ```git clone https://github.com/AnAngryRaven/sphynx```
-3. Change into the appropriate directory: ```cd your/local/directory/here```
-4. Build: ```cargo run```
+1. Ensure that you have Rust installed. If not, download according to your operating system [here](https://www.rust-lang.org/tools/install)
+2. Clone the repo: 
+```
+git clone https://github.com/AnAngryRaven/sphynx
+```
+3. Change into the appropriate directory: 
+```
+cd your/local/directory/here
+```
+4. Build: 
+```
+cargo run
+```
 
 # Usage
 
