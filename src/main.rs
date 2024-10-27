@@ -2,11 +2,12 @@
 //use std::io;
 use std::io::ErrorKind;
 use std::io::prelude::*;
+use std::io::Result;
 use std::fs::{File, OpenOptions};
 use crossterm::event::{read, KeyEvent, KeyCode, KeyModifiers};
 use crossterm::event::Event::Key;
 
-fn main() {
+fn main() -> Result<()> {	
     let mut f = match OpenOptions::new().read(true).open("test.html") {
 		Ok(file) => {
 			file
@@ -15,7 +16,7 @@ fn main() {
 			ErrorKind::NotFound => {
 				println!("GUH FILE NOT FOUND SRRY");
 				let _ = File::create("test.html");
-				OpenOptions::new().read(true).open("test.html".to_string()).unwrap()
+				OpenOptions::new().read(true).open("test.html".to_string())?
 			},
 			other_err => panic!("PANIC {}", other_err)
 		}
@@ -40,9 +41,8 @@ fn main() {
 			Err(error) => panic!("{}", error)
 		}
 	}
-	
-	
 	saveFile(sanitise(input));
+	Ok(())
 }
 
 fn saveFile(contents: String) {
