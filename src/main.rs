@@ -3,6 +3,7 @@
 use std::io::ErrorKind;
 use std::io::prelude::*;
 use std::io::Result;
+use core::iter::Peekable;
 use std::fs::{File, OpenOptions};
 use crossterm::event::{read, KeyEvent, KeyCode, KeyModifiers};
 use crossterm::event::Event::Key;
@@ -41,7 +42,7 @@ fn main() -> Result<()> {
 			Err(error) => panic!("{}", error)
 		}
 	}
-	saveFile(sanitise(input));
+	saveFile(sanitise(input).ok_or(ErrorKind::Other)?);
 	Ok(())
 }
 
@@ -63,23 +64,54 @@ fn saveFile(contents: String) {
 	f.write_all(contents.as_bytes()).unwrap();
 }
 
-fn sanitise(contents: String) -> String {
+fn sanitise(contents: String) -> Option<String> {
+	/*
+		Input: String; MUST be valid UTF-8.
+		Ouptut: String Option.
+		
+		Notes:
+			CC01 - Inserts the appropriate level heading tag for the respective number of `#`.
+				Outputs `#` there's only one 
+	*/
 	
 	let b = contents.into_bytes();
+	let mut b_peek = b.iter().peekable();
 	let mut out: Vec<u8> = Vec::new();
 	//let mut counter = 0;
 	let mut header: bool = false;
 	
 	let h1_beginning: Vec<u8> = vec![60,104,49,62];
-	let h1_end: Vec<u8> = vec![60,47,104,49,62];
+	let h1_end: Vec<u8> = vec![60,47,104,49,62,13];
+	let hashes: Vec<u8> = vec![35,35,35,35,35,35,35];
 	
-	for chars in b {
-		match chars {
-			10 => {
-				if header{
+	
+	loop {
+		let g = match b_peek.next() {
+			Some(w) => w,
+			None => break
+		};
+		
+		match g {
+			13 => {
+				if header {
 					out.extend(&h1_end);
-					header = false;
 				}
+				header = false;
+			}
+			35 => { //Hash check; CC01
+				//TODO: Prevent mid-line `#` from being converted into headings.
+				match matchHeading(&mut b_peek)? {
+					0 => out.push(*g),
+					1 => out.extend(&h1_beginning),
+					2 => todo!(),
+					3 => todo!(),
+					4 => todo!(),
+					5 => todo!(),
+					6 => todo!(),
+					7 => { out.extend(&hashes); continue; },
+					_ => println!("Aborting! Invalid heading value...")
+				}
+				header = true;
 			},
 			42 => println!("asterisk!"),
 			60 => println!("less than!"),
@@ -88,11 +120,23 @@ fn sanitise(contents: String) -> String {
 			123 => println!("opening brace!"),
 			125 => println!("closing brace!"),
 			126 => println!("tilde!"),
-			_ => out.push(chars)
+			_ => {
+				match b_peek.peek() {
+					None => {
+						out.push(*g);
+						if header == true {
+							out.extend(&h1_end);
+						}
+					},
+					_ => out.push(*g)
+				}
+			}
 		}
-		
 	}
-	String::from_utf8_lossy(&out).to_string()
+	
+	let out_str = String::from_utf8_lossy(&out).to_string();
+	println!("{out_str}");
+	Some(String::from_utf8_lossy(&out).to_string())
 }
 
 fn matchHeading(bytes: &mut Peekable<std::slice::Iter<'_, u8>>) -> Option<u8> {
