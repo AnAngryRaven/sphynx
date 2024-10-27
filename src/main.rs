@@ -95,3 +95,48 @@ fn sanitise(contents: String) -> String {
 	String::from_utf8_lossy(&out).to_string()
 }
 
+fn matchHeading(bytes: &mut Peekable<std::slice::Iter<'_, u8>>) -> Option<u8> {
+	/*
+		Input: Peekable Iterator Vec of u8 that SHOULD be bytes.
+		Output: u8 Option; Minimum 0, Maximum 7.
+		
+		TODO: Refactor so that variable numbers of `#` don't result in only 7 `#` from being inserted.
+		
+		Notes:
+			CC01 - Only counts the heading level until 7. Any `#` past that isn't counted, and just results in the Iter being advanced.
+				This makes sure that any future `#` aren't erroneously counted towards a heading.
+	*/
+	let mut heading_level: u8 = 1;
+		
+	loop {
+		match bytes.peek()? {
+			32 => { //Space check; Makes sure that a space after a string of too many `#` is preserved.
+				if heading_level < 7 {
+					bytes.next();
+				}
+				break;
+			},
+			35 => { //Hash check; CC01
+				if heading_level < 7 {
+					heading_level = heading_level + 1;
+					bytes.next();
+				}else {
+					bytes.next();
+				}
+			},
+			_ => { //Misc check; Prevents headings from being applied to hashtags.
+				if heading_level < 7 {
+					heading_level = 0;
+					break;
+				}
+				heading_level = 7;
+				break;
+			}
+		}
+		
+	}
+	if heading_level > 7 {
+		heading_level = 7; //Prevent heading_level from being greater than 7 accidentally.
+	}
+	Some(heading_level)
+}
