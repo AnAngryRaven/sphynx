@@ -39,11 +39,9 @@ fn main() {
 			},
 			Err(error) => panic!("{}", error)
 		}
-		//println!("{:?}", read());
 	}
 	
 	
-	//saveFile(input);
 	saveFile(sanitise(input));
 }
 
@@ -83,7 +81,6 @@ fn sanitise(contents: String) -> String {
 					header = false;
 				}
 			},
-			35 => { out.extend(&h1_beginning); header = true; },
 			42 => println!("asterisk!"),
 			60 => println!("less than!"),
 			62 => println!("greater than!"),
@@ -98,6 +95,3 @@ fn sanitise(contents: String) -> String {
 	String::from_utf8_lossy(&out).to_string()
 }
 
-//fn addHeading(counter: u32) -> Vec<u8> {
-//	
-//}
