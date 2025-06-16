@@ -1,27 +1,22 @@
-#![allow(non_snake_case)]
+mod file_manager;
+mod error_handling;
+mod helpers;
+mod tui;
+
 //use std::io;
 use std::io::ErrorKind;
 use std::io::prelude::*;
 use std::io::Result;
-use core::iter::Peekable;
-use std::fs::{File, OpenOptions};
+use std::iter::Peekable;
+use std::env;
 use crossterm::event::{read, KeyEvent, KeyCode, KeyModifiers};
 use crossterm::event::Event::Key;
 
-fn main() -> Result<()> {	
-    let mut f = match OpenOptions::new().read(true).open("test.html") {
-		Ok(file) => {
-			file
-		}
-		Err(error) => match error.kind() {
-			ErrorKind::NotFound => {
-				println!("GUH FILE NOT FOUND SRRY");
-				let _ = File::create("test.html");
-				OpenOptions::new().read(true).open("test.html".to_string())?
-			},
-			other_err => panic!("PANIC {}", other_err)
-		}
-	};
+use crate::file_manager::open_file;
+
+fn main() -> Result<()> {
+	let args: Vec<String> = env::args().collect();
+    let mut f = open_file("test.html");
 	let mut g: String = String::new();
 	let _= f.read_to_string(&mut g);
 	println!("{}", g);
@@ -42,26 +37,8 @@ fn main() -> Result<()> {
 			Err(error) => panic!("{}", error)
 		}
 	}
-	saveFile(sanitise(input).ok_or(ErrorKind::Other)?);
+	file_manager::save_file(&sanitise(input).ok_or(ErrorKind::Other)?, "test.html");
 	Ok(())
-}
-
-fn saveFile(contents: String) {
-	let mut f = match OpenOptions::new().write(true).open("test.html") {
-		Ok(file) => {
-			file
-		}
-		Err(error) => match error.kind() {
-			ErrorKind::NotFound => {
-				println!("GUH FILE NOT FOUND SRRY");
-				let _ = File::create("test.html");
-				OpenOptions::new().write(true).open("test.html".to_string()).unwrap()
-			},
-			other_err => panic!("PANIC {}", other_err)
-		}
-	};
-	f.set_len(0).unwrap();
-	f.write_all(contents.as_bytes()).unwrap();
 }
 
 fn sanitise(contents: String) -> Option<String> {
